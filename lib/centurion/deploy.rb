@@ -59,7 +59,7 @@ module Centurion::Deploy
   end
 
   def http_status_ok?(target_server, port, endpoint)
-    url      = "http://#{target_server.hostname}:#{port}#{endpoint}"
+    url      = endpoint.start_with?("http") ? endpoint : "http://#{target_server.hostname}:#{port}#{endpoint}"
     response = begin
       Excon.get(url, :headers => {'Accept' => '*/*'})
     rescue Excon::Errors::SocketError

@@ -111,6 +111,8 @@ namespace :deploy do
   end
 
   task :rolling_deploy do
+    status_endpoints = fetch(:status_endpoints, {})
+
     on_each_docker_host do |server|
       stop_containers(server, fetch(:port_bindings), fetch(:stop_timeout, 30))
 
@@ -128,13 +130,15 @@ namespace :deploy do
       skip_ports = Array(fetch(:rolling_deploy_skip_ports, [])).map(&:to_s)
 
       fetch(:port_bindings).each_pair do |container_port, host_ports|
+        status_endpoint = status_endpoints["#{server.hostname}:#{server.port}"] || fetch(:status_endpoint, '/')
+
         port = host_ports.first['HostPort']
         next if skip_ports.include?(port)
 
         wait_for_http_status_ok(
           server,
           port,
-          fetch(:status_endpoint, '/'),
+          status_endpoint,
           fetch(:image),
           fetch(:tag),
           fetch(:rolling_deploy_wait_time, 5),
